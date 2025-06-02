@@ -1,19 +1,31 @@
 <template>
   <v-container fluid>
     <!-- หัวเรื่อง -->
-    <h2 class="text-h6 font-weight-bold mb-4">ຈັດການຂໍ້ມູນສິນຄ້າ</h2>
+    <h2 class="text-h6 font-weight-bold mb-4"
+    style="font-family: 'NotoSansLao-SemiCondensed', 'NotoSansLao-SemiCondensed'; color: #1e1e1e">ຈັດການຂໍ້ມູນສິນຄ້າ</h2>
 
     <!-- ค้นหา -->
     <v-row align="center" class="mb-4">
       <v-col cols="12" sm="6" md="4">
         <v-text-field
-          v-model="search"
-          label="ຄົ້ນຫາ"
-          dense
-          outlined
-          append-inner-icon="/icons/Search.png"
-          @click:append-inner="onSearch"
-        />
+  v-model="search"
+  label="ຄົ້ນຫາ"
+  dense
+  outlined
+  class="flex-grow-1"
+>
+  <template #append-inner>
+    <v-img
+      src="/icons/Search.png"
+      width="20"
+      height="20"
+      cover
+      class="cursor-pointer"
+      @click="onSearch"
+    />
+  </template>
+</v-text-field>
+
       </v-col>
       <v-spacer />
       <v-btn color="green" class="text-white" rounded @click="onAdd">
@@ -21,7 +33,7 @@
       </v-btn>
     </v-row>
 
-    <!-- ตารางสินค้า -->
+    <!-- ตารางแสดงข้อมูล -->
     <v-table class="custom-table">
       <thead>
         <tr>
