@@ -1,9 +1,8 @@
 export default defineNuxtConfig({
-  css: [
-    'vuetify/styles',
-    '@/assets/styles/main.css' // เพิ่มบรรทัดนี้
-  ],
+
+  css: ['vuetify/styles', '@/assets/styles/main.css'],
   build: {
     transpile: ['vuetify'],
   },
 })
+
