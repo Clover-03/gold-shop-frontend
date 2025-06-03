@@ -1,4 +1,4 @@
-<template>
+<template> 
   <v-container fluid>
     <!-- หัวเรื่อง -->
     <h2 class="text-h6 font-weight-bold mb-4"
@@ -8,27 +8,26 @@
     <v-row align="center" class="mb-4">
       <v-col cols="12" sm="6" md="4">
         <v-text-field
-  v-model="search"
-  label="ຄົ້ນຫາ"
-  dense
-  outlined
-  class="flex-grow-1"
->
-  <template #append-inner>
-    <v-img
-      src="/icons/Search.png"
-      width="20"
-      height="20"
-      cover
-      class="cursor-pointer"
-      @click="onSearch"
-    />
-  </template>
-</v-text-field>
-
+          v-model="search"
+          label="ຄົ້ນຫາ"
+          dense
+          outlined
+          class="flex-grow-1"
+        >
+          <template #append-inner>
+            <v-img
+              src="/icons/Search.png"
+              width="20"
+              height="20"
+              cover
+              class="cursor-pointer"
+              @click="onSearch"
+            />
+          </template>
+        </v-text-field>
       </v-col>
       <v-spacer />
-      <v-btn color="green" class="text-white" rounded @click="onAdd">
+      <v-btn color="green" class="text-white" rounded @click="addDialog = true">
         ເພີ່ມ
       </v-btn>
     </v-row>
@@ -83,6 +82,25 @@
       class="mt-4 d-flex justify-end"
     />
 
+    <!-- dialog add -->
+    <v-dialog v-model="addDialog" max-width="500px">
+      <v-card>
+        <v-card-title>ເພີ່ມຂໍ້ມູນສິນຄ້າ</v-card-title>
+        <v-card-text>
+          <v-text-field v-model="newProduct.code" label="ລະຫັດສິນຄ້າ" dense outlined />
+          <v-text-field v-model="newProduct.name" label="ຊື່ສິນຄ້າ" dense outlined />
+          <v-text-field v-model="newProduct.category" label="ປະເພດສິນຄ້າ" dense outlined />
+          <v-text-field v-model="newProduct.weight" label="ນ້ຳຫນັກ" dense outlined />
+          <v-text-field v-model="newProduct.estimatePrice" label="ລາຄາຮູບປະພັນ" dense outlined />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn text @click="addDialog = false">ຍົກເລີກ</v-btn>
+          <v-btn color="primary" text @click="saveNewProduct">ບັນທຶກ</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- dialog edit -->
     <v-dialog v-model="editDialog" max-width="500px">
       <v-card>
@@ -128,6 +146,11 @@ const products = ref([
   }
 ])
 
+const newProduct = ref({
+  code: '', name: '', category: '', weight: '', estimatePrice: ''
+})
+
+const addDialog = ref(false)
 const editDialog = ref(false)
 const editItem = ref({})
 const editIndex = ref(-1)
@@ -140,10 +163,6 @@ const filteredProducts = computed(() => {
     .filter(p => p.code.includes(search.value) || p.name.includes(search.value))
     .slice(start, start + itemsPerPage)
 })
-
-const onAdd = () => {
-  console.log('Add new product')
-}
 
 const onSearch = () => {
   console.log('Searching for:', search.value)
@@ -166,6 +185,14 @@ const saveEdit = () => {
 const onDelete = (index) => {
   const actualIndex = (page.value - 1) * itemsPerPage + index
   products.value.splice(actualIndex, 1)
+}
+
+const saveNewProduct = () => {
+  if (newProduct.value.code) {
+    products.value.push({ ...newProduct.value })
+    addDialog.value = false
+    newProduct.value = { code: '', name: '', category: '', weight: '', estimatePrice: '' }
+  }
 }
 </script>
 
