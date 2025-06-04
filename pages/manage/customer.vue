@@ -5,6 +5,10 @@
       ຈັດການຂໍ້ມູນລູກຄ້າ
     </h2>
 
+    <v-snackbar v-model="snackbar" :timeout="3000" color="success">
+      {{ snackbarMessage }}
+    </v-snackbar>
+
     <!-- Search + Add -->
     <v-row align="center" class="mb-4">
       <v-col cols="12" sm="6" md="4">
@@ -27,7 +31,7 @@
         </v-text-field>
       </v-col>
       <v-spacer />
-      <v-btn color="green" class="text-white" rounded @click="onAdd">
+      <v-btn color="green" class="text-white" rounded @click="onOpenAddDialog">
         ເພີ່ມ
       </v-btn>
     </v-row>
@@ -60,8 +64,8 @@
             />
             <v-img
               src="/icons/Delete.png"
-              width="20"
-              height="20"
+              width="24"
+              height="24"
               cover
               @click="onDelete(index)"
               class="cursor-pointer"
@@ -81,9 +85,11 @@
     <!-- Dialog -->
     <v-dialog v-model="dialog" max-width="500px">
       <v-card>
-        <v-card-title>ແກ້ໄຂຂໍ້ມູນລູກຄ້າ</v-card-title>
-        <v-card-text>
-          <v-form ref="formRef" v-model="formValid">
+        <v-card-title class="dialog-title">
+          {{ editIndex === -1 ? 'ເພີ່ມລູກຄ້າ' : 'ແກ້ໄຂລູກຄ້າ' }}
+        </v-card-title>
+        <v-form ref="formRef" @submit.prevent="save" v-model="formValid">
+          <v-card-text>
             <v-text-field
               v-model="form.code"
               :rules="[rules.required]"
@@ -108,13 +114,13 @@
               label="ທີ່ຢູ່"
               dense outlined
             />
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn text @click="dialog = false">ຍົກເລີກ</v-btn>
-          <v-btn color="primary" text @click="saveEdit">ບັນທຶກ</v-btn>
-        </v-card-actions>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn class="btn-cancel" @click="dialog = false">ຍົກເລີກ</v-btn>
+            <v-btn class="btn-save" type="submit" :disabled="!formValid">ບັນທຶກ</v-btn>
+          </v-card-actions>
+        </v-form>
       </v-card>
     </v-dialog>
   </v-container>
@@ -126,6 +132,8 @@ import { ref, computed } from 'vue'
 const search = ref('')
 const page = ref(1)
 const itemsPerPage = 5
+const snackbar = ref(false)
+const snackbarMessage = ref('')
 
 const customers = ref([
   {
@@ -139,7 +147,7 @@ const customers = ref([
 const dialog = ref(false)
 const form = ref({})
 const formValid = ref(false)
-const formRef = ref()
+const formRef = ref(null)
 const editIndex = ref(-1)
 
 const rules = {
@@ -160,8 +168,8 @@ const onSearch = () => {
   console.log('Search:', search.value)
 }
 
-const onAdd = () => {
-  form.value = { code: '', name: '', phone: '', address: '' }
+const onOpenAddDialog = () => {
+  resetForm()
   editIndex.value = -1
   dialog.value = true
 }
@@ -171,22 +179,36 @@ const onEdit = (index) => {
   form.value = { ...customers.value[actual] }
   editIndex.value = actual
   dialog.value = true
+  formRef.value?.resetValidation()
+  formValid.value = true
 }
 
 const onDelete = (index) => {
   const actual = (page.value - 1) * itemsPerPage + index
   customers.value.splice(actual, 1)
+  snackbarMessage.value = 'ລຶບລູກຄ້າສຳເລັດ'
+  snackbar.value = true
 }
 
-const saveEdit = () => {
-  if (formRef.value?.validate()) {
-    if (editIndex.value === -1) {
-      customers.value.push({ ...form.value })
-    } else {
-      customers.value[editIndex.value] = { ...form.value }
-    }
-    dialog.value = false
+const resetForm = () => {
+  form.value = { code: '', name: '', phone: '', address: '' }
+  formRef.value?.resetValidation()
+  formValid.value = false
+}
+
+const save = async () => {
+  const valid = await formRef.value.validate()
+  if (!valid) return
+
+  if (editIndex.value === -1) {
+    customers.value.push({ ...form.value })
+    snackbarMessage.value = 'ເພີ່ມລູກຄ້າສຳເລັດ'
+  } else {
+    customers.value[editIndex.value] = { ...form.value }
+    snackbarMessage.value = 'ແກ້ໄຂລູກຄ້າສຳເລັດ'
   }
+  dialog.value = false
+  snackbar.value = true
 }
 </script>
 
@@ -200,5 +222,18 @@ th {
 .custom-table td, .custom-table th {
   vertical-align: middle;
   padding: 10px;
+}
+.dialog-title {
+  background-color: #365a76;
+  color: white;
+  font-weight: bold;
+}
+.btn-cancel {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+.btn-save {
+  background-color: #4caf50 !important;
+  color: white !important;
 }
 </style>
