@@ -1,6 +1,9 @@
-<template>
+<template> 
   <v-container fluid>
-    <h2 class="text-h6 font-weight-bold mb-4">ຈັດການຂໍ້ມູນສິນຄ້າ</h2>
+    <h2 class="text-h6 font-weight-bold mb-4"
+        style="font-family: 'NotoSansLao-SemiCondensed', 'NotoSansLao-SemiCondensed'; color: #1e1e1e">
+      ຈັດການຂໍ້ມູນສິນຄ້າ
+    </h2>
 
     <v-snackbar v-model="snackbar" :timeout="3000" color="success">
       {{ snackbarMessage }}
@@ -14,9 +17,19 @@
           label="ຄົ້ນຫາ"
           dense
           outlined
-          append-inner-icon="/icons/Search.png"
-          @click:append-inner="onSearch"
-        />
+          class="flex-grow-1"
+        >
+          <template #append-inner>
+            <v-img
+              src="/icons/Search.png"
+              width="20"
+              height="20"
+              cover
+              class="cursor-pointer"
+              @click="onSearch"
+            />
+          </template>
+        </v-text-field>
       </v-col>
       <v-spacer />
       <v-btn color="green" class="text-white" rounded @click="onOpenAddDialog">
@@ -110,15 +123,6 @@ const products = ref([
   { code: 'P002', name: 'ສັງຄະລິດຄຳ', category: 'ສັງຄະລິດ', weight: '2 ບາດ', estimatePrice: '4,000,000' }
 ])
 
-const pageCount = computed(() => Math.ceil(products.value.length / itemsPerPage))
-
-const filteredProducts = computed(() => {
-  const start = (page.value - 1) * itemsPerPage
-  return products.value
-    .filter(p => p.code.includes(search.value) || p.name.includes(search.value))
-    .slice(start, start + itemsPerPage)
-})
-
 const addDialog = ref(false)
 const editDialog = ref(false)
 const addItem = ref({ code: '', name: '', category: '', weight: '', estimatePrice: '' })
@@ -132,6 +136,15 @@ const editFormValid = ref(false)
 
 const required = value => !!value || 'ຈຳເປັນຕ້ອງປ້ອນ'
 const numeric = value => /^\d+(,\d{3})*(\.\d+)?$/.test(value) || 'ຕ້ອງໃສ່ເປັນຕົວເລກ'
+
+const pageCount = computed(() => Math.ceil(products.value.length / itemsPerPage))
+
+const filteredProducts = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return products.value
+    .filter(p => p.code.includes(search.value) || p.name.includes(search.value))
+    .slice(start, start + itemsPerPage)
+})
 
 const onSearch = () => {
   console.log('Search:', search.value)
