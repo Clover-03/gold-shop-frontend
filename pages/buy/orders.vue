@@ -12,10 +12,20 @@
       <v-col cols="12" sm="6" md="4">
         <v-text-field
           v-model="search"
-          label="ຄົ້ນຫາຊື່ຜູ້ສະໜອງ / ສະຖານະ"
+          label="ຄົ້ນຫາ"
           dense
           outlined
-        />
+        >
+          <template #append-inner>
+            <v-img
+              src="/icons/Search.png"
+              width="20"
+              height="20"
+              class="cursor-pointer"
+              @click="onSearch"
+            />
+          </template>
+        </v-text-field>
       </v-col>
       <v-spacer />
       <v-col cols="auto">
@@ -25,16 +35,14 @@
 
     <v-data-table
       :headers="headers"
-      :items="filteredOrders"
-      :items-per-page="itemsPerPage"
-      show-current-page
-      show-select
-      :items-per-page-options="[5, 10, 20, 50]"
+      :items="paginatedOrders"
+      :items-per-page="-1"
+      hide-default-footer
       class="elevation-1"
       item-value="Order_ID"
     >
       <template #[`item.index`]="{ index }">
-        {{ index + 1 }}
+        {{ (page - 1) * itemsPerPage + index + 1 }}
       </template>
 
       <template #[`item.Order_Date`]="{ item }">
@@ -48,11 +56,122 @@
       </template>
 
       <template #[`item.actions`]="{ item }">
-        <v-btn small color="info" @click="viewProducts(item.Order_ID)">ເບິ່ງສິນຄ້າ</v-btn>
-        <v-btn small color="primary" @click="editOrder(item)">ແກ້ໄຂ</v-btn>
-        <v-btn small color="error" @click="deleteOrder(item.Order_ID)">ລຶບ</v-btn>
+        <div class="d-flex align-center justify-start">
+          <v-icon
+            size="20"
+            color="info"
+            class="mr-2"
+            @click="viewProducts(item.Order_ID)"
+          >
+            <v-img
+              src="/icons/buy_order.png"
+              width="20"
+              height="20"
+              class="cursor-pointer"
+            />
+          </v-icon>
+          <v-icon
+            size="20"
+            color="primary"
+            class="mr-2"
+            @click="editOrder(item)"
+          >
+            <v-img
+              src="/icons/Edit.png"
+              width="20"
+              height="20"
+              class="cursor-pointer"
+            />
+          </v-icon>
+          <v-icon
+            size="20"
+            color="error"
+            @click="deleteOrder(item.Order_ID)"
+          >
+            <v-img
+              src="/icons/Delete.png"
+              width="20"
+              height="20"
+              class="cursor-pointer"
+            />
+          </v-icon>
+        </div>
       </template>
     </v-data-table>
+
+    <!-- Centered Pagination -->
+    <div class="d-flex justify-center align-center mt-4">
+      <v-pagination
+        v-model="page"
+        :length="Math.ceil(filteredOrders.length / itemsPerPage)"
+        :total-visible="7"
+      >
+        <template #prev="{ props }">
+          <v-btn
+            variant="text"
+            v-bind="props"
+            class="px-0"
+            @click="goToPreviousPage"
+          >
+            <v-img
+              src="/icons/Arrow.png"
+              width="20"
+              height="20"
+              style="transform: rotate(90deg);"
+              class="cursor-pointer"
+            />
+          </v-btn>
+        </template>
+        <template #next="{ props }">
+          <v-btn
+            variant="text"
+            v-bind="props"
+            class="px-0"
+            @click="goToNextPage"
+          >
+            <v-img
+              src="/icons/Arrow.png"
+              width="20"
+              height="20"
+              style="transform: rotate(270deg);"
+              class="cursor-pointer"
+            />
+          </v-btn>
+        </template>
+      </v-pagination>
+
+      <!-- More Pages Menu -->
+      <v-menu
+        v-model="pageMenu"
+        :close-on-content-click="true"
+        location="bottom end"
+      >
+        <template v-slot:activator="{ props }">
+          <v-btn
+            icon
+            v-bind="props"
+            class="ml-2"
+          >
+            <v-img
+              src="/icons/more.png"
+              width="24"
+              height="24"
+              class="cursor-pointer"
+            />
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item
+            v-for="n in Math.ceil(filteredOrders.length / itemsPerPage)"
+            :key="n"
+            :value="n"
+            @click="page = n"
+          >
+            <v-list-item-title>ໜ້າ {{ n }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </div>
 
     <!-- Dialog: Add/Edit Order -->
     <v-dialog v-model="dialog" max-width="600px">
@@ -139,9 +258,11 @@ const snackbarMessage = ref('')
 const dialog = ref(false)
 const productDialog = ref(false)
 const datePickerMenu = ref(false)
+const pageMenu = ref(false)
 const search = ref('')
 const itemsPerPage = ref(10)
 const editIndex = ref(-1)
+const page = ref(1)
 
 const formRef = ref(null)
 const form = ref({
@@ -169,13 +290,103 @@ const orders = ref([
     Sup_ID: 'S002',
     Sup_name: 'ຜູ້ສະໜອງ B',
     status: 'ຍົກເລີກ'
+  },
+  {
+    Order_ID: 3,
+    Order_Date: '2025-06-05',
+    Sup_ID: 'S001',
+    Sup_name: 'ຜູ້ສະໜອງ A',
+    status: 'ລໍຖ້າສົ່ງ'
+  },
+  {
+    Order_ID: 4,
+    Order_Date: '2025-06-07',
+    Sup_ID: 'S003',
+    Sup_name: 'ຜູ້ສະໜອງ C',
+    status: 'ສົ່ງແລ້ວ'
+  },
+  {
+    Order_ID: 5,
+    Order_Date: '2025-06-10',
+    Sup_ID: 'S002',
+    Sup_name: 'ຜູ້ສະໜອງ B',
+    status: 'ລໍຖ້າສົ່ງ'
+  },
+  {
+    Order_ID: 6,
+    Order_Date: '2025-06-12',
+    Sup_ID: 'S001',
+    Sup_name: 'ຜູ້ສະໜອງ A',
+    status: 'ສົ່ງແລ້ວ'
+  },
+  {
+    Order_ID: 7,
+    Order_Date: '2025-06-15',
+    Sup_ID: 'S003',
+    Sup_name: 'ຜູ້ສະໜອງ C',
+    status: 'ລໍຖ້າສົ່ງ'
+  },
+  {
+    Order_ID: 8,
+    Order_Date: '2025-06-18',
+    Sup_ID: 'S002',
+    Sup_name: 'ຜູ້ສະໜອງ B',
+    status: 'ສົ່ງແລ້ວ'
+  },
+  {
+    Order_ID: 9,
+    Order_Date: '2025-06-20',
+    Sup_ID: 'S001',
+    Sup_name: 'ຜູ້ສະໜອງ A',
+    status: 'ຍົກເລີກ'
+  },
+  {
+    Order_ID: 10,
+    Order_Date: '2025-06-22',
+    Sup_ID: 'S003',
+    Sup_name: 'ຜູ້ສະໜອງ C',
+    status: 'ສົ່ງແລ້ວ'
+  },
+  {
+    Order_ID: 11,
+    Order_Date: '2025-06-25',
+    Sup_ID: 'S002',
+    Sup_name: 'ຜູ້ສະໜອງ B',
+    status: 'ລໍຖ້າສົ່ງ'
+  },
+  {
+    Order_ID: 12,
+    Order_Date: '2025-06-28',
+    Sup_ID: 'S001',
+    Sup_name: 'ຜູ້ສະໜອງ A',
+    status: 'ສົ່ງແລ້ວ'
+  },
+  {
+    Order_ID: 13,
+    Order_Date: '2025-07-01',
+    Sup_ID: 'S003',
+    Sup_name: 'ຜູ້ສະໜອງ C',
+    status: 'ລໍຖ້າສົ່ງ'
+  },
+  {
+    Order_ID: 14,
+    Order_Date: '2025-07-03',
+    Sup_ID: 'S002',
+    Sup_name: 'ຜູ້ສະໜອງ B',
+    status: 'ສົ່ງແລ້ວ'
+  },
+  {
+    Order_ID: 15,
+    Order_Date: '2025-07-05',
+    Sup_ID: 'S001',
+    Sup_name: 'ຜູ້ສະໜອງ A',
+    status: 'ຍົກເລີກ'
   }
 ])
 
 const allProducts = ref([
   { Pd_ID: 'P001', Pd_name: 'ສາຍຄໍທອງ', Order_ID: 1 },
-  { Pd_ID: 'P002', Pd_name: 'ສາຍຂ້ອມມື', Order_ID: 1 },
-  { Pd_ID: 'P003', Pd_name: 'ຕຸ້ມຫູທອງ', Order_ID: 2 }
+  { Pd_ID: 'P002', Pd_name: 'ສາຍຂ້ອມມື', Order_ID: 2 }
 ])
 
 const selectedProducts = ref([])
@@ -264,7 +475,7 @@ const headers = [
   { title: 'ວັນທີສັ່ງ', value: 'Order_Date' },
   { title: 'ຜູ້ສະໜອງ', value: 'Sup_name' },
   { title: 'ສະຖານະ', value: 'status' },
-  { title: 'ເບິ່ງສິນຄ້າ', value: 'actions', sortable: false }
+  { title: 'option', value: 'actions', sortable: false }
 ]
 
 const filteredOrders = computed(() => {
@@ -274,6 +485,27 @@ const filteredOrders = computed(() => {
     order.status.includes(search.value)
   )
 })
+
+// คำนวณข้อมูลที่จะแสดงในแต่ละหน้า
+const paginatedOrders = computed(() => {
+  const start = (page.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredOrders.value.slice(start, end)
+})
+
+// เพิ่มฟังก์ชันสำหรับการนำทาง
+function goToPreviousPage() {
+  if (page.value > 1) {
+    page.value--
+  }
+}
+
+function goToNextPage() {
+  const maxPage = Math.ceil(filteredOrders.value.length / itemsPerPage.value)
+  if (page.value < maxPage) {
+    page.value++
+  }
+}
 </script>
 
 <style scoped>
@@ -291,5 +523,11 @@ const filteredOrders = computed(() => {
 .btn-save {
   background-color: #4caf50 !important;
   color: white !important;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+.gap-2 {
+  gap: 8px;
 }
 </style>
