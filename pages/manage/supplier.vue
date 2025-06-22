@@ -5,8 +5,8 @@
       ຈັດການຂໍ້ມູນຜູ້ສະໜອງ
     </h2>
 
-    <v-snackbar v-model="snackbar" :timeout="3000" color="success">
-      {{ snackbarMessage }}
+    <v-snackbar v-model="snackbar.show" :timeout="3000" :color="snackbar.color">
+      {{ snackbar.message }}
     </v-snackbar>
 
     <!-- Search + Add -->
@@ -17,6 +17,7 @@
           label="ຄົ້ນຫາ"
           dense
           outlined
+          hide-details
         >
           <template #append-inner>
             <v-img
@@ -25,7 +26,6 @@
               height="20"
               cover
               class="cursor-pointer"
-              @click="onSearch"
             />
           </template>
         </v-text-field>
@@ -35,58 +35,90 @@
         ເພີ່ມ
       </v-btn>
     </v-row>
+    
+    <!-- Loading State -->
+    <div v-if="isLoading" class="text-center py-10">
+      <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+      <p class="mt-4">ກຳລັງໂຫລດຂໍ້ມູນ...</p>
+    </div>
+    
+    <!-- Empty State -->
+    <div v-else-if="suppliers.length === 0" class="text-center py-10">
+      <v-icon size="64" color="grey-lighten-2">mdi-store-outline</v-icon>
+      <p class="mt-4 text-h6 text-grey-lighten-1">ບໍ່ມີຂໍ້ມູນຜູ້ສະໜອງ</p>
+      <p class="text-body-1 text-grey-lighten-1">ລອງກົດປຸ່ມ "ເພີ່ມ" ເພື່ອສ້າງຜູ້ສະໜອງໃໝ່.</p>
+    </div>
 
     <!-- Table -->
-    <v-table class="custom-table">
+    <v-table v-else class="custom-table">
       <thead>
         <tr>
-          <th>ລະຫັດຜູ້ສະໜອງ</th>
-          <th>ຊື່ຜູ້ສະໜອງ</th>
+          <th @click="sortBy('code')" class="cursor-pointer">
+            ລະຫັດຜູ້ສະໜອງ <v-icon>{{ getSortIcon('code') }}</v-icon>
+          </th>
+          <th @click="sortBy('name')" class="cursor-pointer">
+            ຊື່ຜູ້ສະໜອງ <v-icon>{{ getSortIcon('name') }}</v-icon>
+          </th>
           <th>ເບີໂທ</th>
           <th>ທີ່ຢູ່</th>
           <th class="text-center">Option</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(item, index) in filteredSuppliers" :key="index">
+        <tr v-for="item in paginatedSuppliers" :key="item.id">
           <td>{{ item.code }}</td>
           <td>{{ item.name }}</td>
           <td>{{ item.phone }}</td>
           <td>{{ item.address }}</td>
-          <td class="d-flex justify-center align-center gap-2">
-            <v-img
-              src="/icons/Edit.png"
-              width="20"
-              height="20"
-              cover
-              @click="onEdit(index)"
-              class="cursor-pointer"
-            />
-            <v-img
-              src="/icons/Delete.png"
-              width="24"
-              height="24"
-              cover
-              @click="onDelete(index)"
-              class="cursor-pointer"
-            />
+          <td class="text-center">
+            <v-btn icon variant="text" density="comfortable" @click="onEdit(item)">
+              <v-img src="/icons/Edit.png" width="20" height="20" />
+            </v-btn>
+            <v-btn icon variant="text" density="comfortable" @click="onDelete(item)">
+              <v-img src="/icons/Delete.png" width="20" height="20" />
+            </v-btn>
           </td>
         </tr>
       </tbody>
     </v-table>
 
     <!-- Pagination -->
-    <v-pagination
-      v-model="page"
-      :length="pageCount"
-      class="mt-4 d-flex justify-end"
-    />
+    <div v-if="!isLoading && suppliers.length > 0" class="d-flex justify-center align-center mt-4">
+      <v-pagination
+        v-model="page"
+        :length="Math.ceil(filteredSuppliers.length / itemsPerPage)"
+        :total-visible="7"
+      >
+        <template #prev="{ props }">
+          <v-btn variant="text" v-bind="props" class="px-0" @click="goToPreviousPage">
+            <v-img src="/icons/Arrow.png" width="20" height="20" style="transform: rotate(90deg);" />
+          </v-btn>
+        </template>
+        <template #next="{ props }">
+          <v-btn variant="text" v-bind="props" class="px-0" @click="goToNextPage">
+            <v-img src="/icons/Arrow.png" width="20" height="20" style="transform: rotate(270deg);" />
+          </v-btn>
+        </template>
+      </v-pagination>
+      <v-menu v-model="pageMenu" :close-on-content-click="true" location="bottom end">
+        <template v-slot:activator="{ props }">
+          <v-btn icon v-bind="props" class="ml-2">
+            <v-img src="/icons/more.png" width="24" height="24" />
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item v-for="n in Math.ceil(filteredSuppliers.length / itemsPerPage)" :key="n" :value="n" @click="page = n">
+            <v-list-item-title>ໜ້າ {{ n }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </div>
 
-    <!-- Dialog -->
+    <!-- Add/Edit Dialog -->
     <v-dialog v-model="dialog" max-width="500px">
       <v-card>
         <v-card-title class="dialog-title">
-          {{ editIndex === -1 ? 'ເພີ່ມຜູ້ສະໜອງ' : 'ແກ້ໄຂຜູ້ສະໜອງ' }}
+          {{ isEditMode ? 'ແກ້ໄຂຜູ້ສະໜອງ' : 'ເພີ່ມຜູ້ສະໜອງ' }}
         </v-card-title>
         <v-form ref="formRef" @submit.prevent="save" v-model="formValid">
           <v-card-text>
@@ -95,6 +127,7 @@
               :rules="[rules.required]"
               label="ລະຫັດຜູ້ສະໜອງ"
               dense outlined
+              :disabled="isEditMode"
             />
             <v-text-field
               v-model="form.name"
@@ -117,78 +150,117 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer />
-            <v-btn class="btn-cancel" @click="dialog = false">ຍົກເລີກ</v-btn>
-            <v-btn class="btn-save" type="submit" :disabled="!formValid">ບັນທຶກ</v-btn>
+            <v-btn class="btn-cancel" @click="dialog = false" :disabled="isSaving">ຍົກເລີກ</v-btn>
+            <v-btn class="btn-save" type="submit" :disabled="!formValid" :loading="isSaving">ບັນທຶກ</v-btn>
           </v-card-actions>
         </v-form>
+      </v-card>
+    </v-dialog>
+    
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog v-model="deleteDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="dialog-title">ຢືນຢັນການລຶບ</v-card-title>
+        <v-card-text>
+          ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຜູ້ສະໜອງ "{{ itemToDelete?.name }}"?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn class="btn-cancel" @click="deleteDialog = false" :disabled="isSaving">ບໍ່</v-btn>
+          <v-btn class="btn-save" @click="confirmDelete" :loading="isSaving">ແມ່ນ</v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import {
+  fetchSuppliers as apiFetchSuppliers,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier
+} from '~/services/supplierApi';
+
+const isLoading = ref(true);
+const isSaving = ref(false);
 
 const search = ref('')
 const page = ref(1)
-const itemsPerPage = 5
-const snackbar = ref(false)
-const snackbarMessage = ref('')
+const itemsPerPage = ref(8)
+const sortKey = ref('name') // Default sort key
+const sortDesc = ref(false) // Default sort order (ascending)
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'success'
+})
 
-const suppliers = ref([
-  {
-    code: 'S0001',
-    name: 'ຮ້ານຂາຍຄໍາສະຫວັນ',
-    phone: '2066666666',
-    address: 'ບ້ານສາຍອົມ ເມືອງວັງວຽງ ມະຫາສາລະຄາມ'
-  }
-])
+const suppliers = ref([])
 
 const dialog = ref(false)
+const deleteDialog = ref(false)
 const form = ref({})
+const itemToDelete = ref(null)
 const formValid = ref(false)
 const formRef = ref(null)
-const editIndex = ref(-1)
+const isEditMode = ref(false)
+const pageMenu = ref(false)
 
 const rules = {
   required: v => !!v || 'ຈຳເປັນຕ້ອງປ້ອນ',
   phone: v => /^\d{8,15}$/.test(v) || 'ເບີໂທບໍ່ຖືກຕ້ອງ'
 }
 
-const pageCount = computed(() => Math.ceil(suppliers.value.length / itemsPerPage))
+const sortedSuppliers = computed(() => {
+  const key = sortKey.value;
+  const order = sortDesc.value ? -1 : 1;
+  return [...suppliers.value].sort((a, b) => {
+    const valA = a[key]?.toLowerCase() || '';
+    const valB = b[key]?.toLowerCase() || '';
+    if (valA < valB) return -1 * order;
+    if (valA > valB) return 1 * order;
+    return 0;
+  });
+});
 
 const filteredSuppliers = computed(() => {
-  const start = (page.value - 1) * itemsPerPage
-  return suppliers.value
-    .filter(c => c.code.includes(search.value) || c.name.includes(search.value))
-    .slice(start, start + itemsPerPage)
+  let data = sortedSuppliers.value;
+  if (search.value) {
+    const lowerSearch = search.value.toLowerCase();
+    data = data.filter(s => 
+      (s.code?.toLowerCase() || '').includes(lowerSearch) || 
+      (s.name?.toLowerCase() || '').includes(lowerSearch)
+    );
+  }
+  return data;
+});
+
+const paginatedSuppliers = computed(() => {
+  const start = (page.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredSuppliers.value.slice(start, end)
 })
 
-const onSearch = () => {
-  console.log('Search:', search.value)
+const showSnackbar = (message, color = 'success') => {
+  snackbar.value.message = message;
+  snackbar.value.color = color;
+  snackbar.value.show = true;
+};
+
+const getSuppliers = async () => {
+  isLoading.value = true;
+  try {
+    suppliers.value = await apiFetchSuppliers();
+  } catch (error) {
+    showSnackbar(error.message, 'error');
+  } finally {
+    isLoading.value = false;
+  }
 }
 
-const onOpenAddDialog = () => {
-  resetForm()
-  editIndex.value = -1
-  dialog.value = true
-}
-
-const onEdit = (index) => {
-  const actual = (page.value - 1) * itemsPerPage + index
-  form.value = { ...suppliers.value[actual] }
-  editIndex.value = actual
-  dialog.value = true
-  formRef.value?.resetValidation()
-  formValid.value = true
-}
-
-const onDelete = (index) => {
-  const actual = (page.value - 1) * itemsPerPage + index
-  suppliers.value.splice(actual, 1)
-  snackbarMessage.value = 'ລຶບຜູ້ສະໜອງສຳເລັດ'
-  snackbar.value = true
-}
+onMounted(getSuppliers);
 
 const resetForm = () => {
   form.value = { code: '', name: '', phone: '', address: '' }
@@ -196,20 +268,88 @@ const resetForm = () => {
   formValid.value = false
 }
 
+const onOpenAddDialog = () => {
+  resetForm()
+  isEditMode.value = false
+  dialog.value = true
+}
+
+const onEdit = (item) => {
+  form.value = { ...item }
+  isEditMode.value = true
+  dialog.value = true
+  formRef.value?.resetValidation()
+  formValid.value = true
+}
+
 const save = async () => {
-  const valid = await formRef.value.validate()
+  const { valid } = await formRef.value.validate()
   if (!valid) return
 
-  if (editIndex.value === -1) {
-    suppliers.value.push({ ...form.value })
-    snackbarMessage.value = 'ເພີ່ມຜູ້ສະໜອງສຳເລັດ'
-  } else {
-    suppliers.value[editIndex.value] = { ...form.value }
-    snackbarMessage.value = 'ແກ້ໄຂຜູ້ສະໜອງສຳເລັດ'
+  isSaving.value = true;
+  try {
+    if (isEditMode.value) {
+      await updateSupplier(form.value.id, form.value);
+    } else {
+      await createSupplier(form.value);
+    }
+
+    await getSuppliers();
+    dialog.value = false;
+    showSnackbar(isEditMode.value ? 'ແກ້ໄຂຜູ້ສະໜອງສຳເລັດ' : 'ເພີ່ມຜູ້ສະໜອງສຳເລັດ');
+  } catch (error) {
+    showSnackbar(error.message, 'error');
+  } finally {
+    isSaving.value = false;
   }
-  dialog.value = false
-  snackbar.value = true
 }
+
+const onDelete = (item) => {
+  itemToDelete.value = item;
+  deleteDialog.value = true;
+}
+
+const confirmDelete = async () => {
+  if (!itemToDelete.value) return;
+  isSaving.value = true;
+  try {
+    await deleteSupplier(itemToDelete.value.id);
+    await getSuppliers();
+    deleteDialog.value = false;
+    itemToDelete.value = null;
+    showSnackbar('ລຶບຜູ້ສະໜອງສຳເລັດ');
+  } catch (error) {
+    showSnackbar(error.message, 'error');
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+function goToPreviousPage() {
+  if (page.value > 1) page.value--
+}
+
+function goToNextPage() {
+  const totalPages = Math.ceil(filteredSuppliers.value.length / itemsPerPage.value)
+  if (page.value < totalPages) page.value++
+}
+
+const sortBy = (key) => {
+  if (sortKey.value === key) {
+    sortDesc.value = !sortDesc.value;
+  } else {
+    sortKey.value = key;
+    sortDesc.value = false;
+  }
+  page.value = 1; // Reset to first page
+};
+
+const getSortIcon = (key) => {
+  if (sortKey.value !== key) {
+    return 'mdi-sort';
+  }
+  return sortDesc.value ? 'mdi-sort-descending' : 'mdi-sort-ascending';
+};
 </script>
 
 <style scoped>
@@ -235,5 +375,18 @@ th {
 .btn-save {
   background-color: #4caf50 !important;
   color: white !important;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+.text-center {
+  text-align: center;
+}
+th.cursor-pointer {
+  cursor: pointer;
+  user-select: none;
+}
+th.cursor-pointer:hover {
+  background-color: rgba(0,0,0,0.05);
 }
 </style>

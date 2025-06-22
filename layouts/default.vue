@@ -73,7 +73,7 @@
               </template>
             </v-list-item>
           </template>
-          <v-list-item to="/sell/products" title="ຈັດການຂໍ້ມູນການຂາຍສິນຄ້າ" :class="{ 'active-link': isActive('/sell/products') }" />
+          <v-list-item to="/sell/selling" title="ຈັດການຂໍ້ມູນການຂາຍສິນຄ້າ" :class="{ 'active-link': isActive('/sell/selling') }" />
           <v-list-item to="/sell/exchanges" title="ຈັດການຂໍ້ມູນການປ່ຽນສິນຄ້າ" :class="{ 'active-link': isActive('/sell/exchanges') }" />
         </v-list-group>
 
@@ -89,15 +89,15 @@
               </template>
             </v-list-item>
           </template>
-          <v-list-item to="/report/customers" title="ລາຍງານຂໍ້ມູນລູກຄ້າ" :class="{ 'active-link': isActive('/report/customers') }" />
-          <v-list-item to="/report/suppliers" title="ລາຍງານຂໍ້ມູນຜູ້ສະໜອງ" :class="{ 'active-link': isActive('/report/suppliers') }" />
-          <v-list-item to="/report/deliveries" title="ລາຍງານຂໍ້ມູນການນຳສົ່ງສິນຄ້າ" :class="{ 'active-link': isActive('/report/deliveries') }" />
-          <v-list-item to="/report/sales" title="ລາຍງານຂໍ້ມູນການຂາຍສິນຄ້າ" :class="{ 'active-link': isActive('/report/sales') }" />
-          <v-list-item to="/report/returns" title="ລາຍງານຂໍ້ມູນການຊື້ຄືນສິນຄ້າ" :class="{ 'active-link': isActive('/report/returns') }" />
-          <v-list-item to="/report/exchanges" title="ລາຍງານຂໍ້ມູນການປ່ຽນສິນຄ້າ" :class="{ 'active-link': isActive('/report/exchanges') }" />
-          <v-list-item to="/report/orders" title="ລາຍງານຂໍ້ມູນການສັ່ງຊື້ສິນຄ້າ" :class="{ 'active-link': isActive('/report/orders') }" />
-          <v-list-item to="/report/income" title="ລາຍງານຂໍ້ມູນລາຍຮັບ" :class="{ 'active-link': isActive('/report/income') }" />
-          <v-list-item to="/report/expense" title="ລາຍງານຂໍ້ມູນລາຍຈ່າຍ" :class="{ 'active-link': isActive('/report/expense') }" />
+          <v-list-item to="/reports/customers" title="ລາຍງານຂໍ້ມູນລູກຄ້າ" :class="{ 'active-link': isActive('/reports/customers') }" />
+          <v-list-item to="/reports/suppliers" title="ລາຍງານຂໍ້ມູນຜູ້ສະໜອງ" :class="{ 'active-link': isActive('/reports/suppliers') }" />
+          <v-list-item to="/reports/deliveries" title="ລາຍງານຂໍ້ມູນການນຳສົ່ງສິນຄ້າ" :class="{ 'active-link': isActive('/reports/deliveries') }" />
+          <v-list-item to="/reports/sales" title="ລາຍງານຂໍ້ມູນການຂາຍສິນຄ້າ" :class="{ 'active-link': isActive('/reports/sales') }" />
+          <v-list-item to="/reports/returns" title="ລາຍງານຂໍ້ມູນການຊື້ຄືນສິນຄ້າ" :class="{ 'active-link': isActive('/reports/returns') }" />
+          <v-list-item to="/reports/exchanges" title="ລາຍງານຂໍ້ມູນການປ່ຽນສິນຄ້າ" :class="{ 'active-link': isActive('/reports/exchanges') }" />
+          <v-list-item to="/reports/orders" title="ລາຍງານຂໍ້ມູນການສັ່ງຊື້ສິນຄ້າ" :class="{ 'active-link': isActive('/reports/orders') }" />
+          <v-list-item to="/reports/income" title="ລາຍງານຂໍ້ມູນລາຍຮັບ" :class="{ 'active-link': isActive('/reports/income') }" />
+          <v-list-item to="/reports/expense" title="ລາຍງານຂໍ້ມູນລາຍຈ່າຍ" :class="{ 'active-link': isActive('/reports/expense') }" />
         </v-list-group>
       </v-list>
 
@@ -114,7 +114,7 @@
       </template>
     </v-navigation-drawer>
 
-    <v-main>
+    <v-main class="main-background">
       <v-container fluid>
         <NuxtPage />
       </v-container>
@@ -134,6 +134,9 @@ const logout = () => {
 </script>
 
 <style scoped>
+.main-background {
+  background-color: #f4f6f8;
+}
 .active-link {
   background-color: #295396 !important;
   color: white !important;

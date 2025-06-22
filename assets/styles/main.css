@@ -1,10 +1,40 @@
+/* 
+  Define the custom Lao font that will be used across the application.
+  This font is located in the /public/fonts/ directory.
+*/
+
 @font-face {
   font-family: 'NotoSansLao-SemiCondensed';
   src: url('/fonts/NotoSansLao-SemiCondensed.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap; /* Improves performance by avoiding invisible text */
 }
 
-body {
-  font-family: 'NotoSansLao-SemiCondensed', sans-serif;
+/* 
+  Apply the custom font to the entire application for consistency.
+  We also include fallback fonts like 'sans-serif' for broader compatibility.
+*/
+html, body, .v-application, .v-application .text-h6, .v-application .text-body-1 {
+  font-family: 'NotoSansLao-SemiCondensed', 'Noto Sans Lao', sans-serif !important;
+}
+
+/* 
+  Ensure all buttons also inherit the new font style.
+  This is important for UI consistency.
+*/
+.v-btn {
+  font-family: 'NotoSansLao-SemiCondensed', 'Noto Sans Lao', sans-serif !important;
+}
+
+/* 
+  Target specific Vuetify components to ensure they render with the correct font,
+  as they sometimes have their own default styles.
+*/
+.v-card-title, .v-card-text, .v-label, .v-text-field input, .v-select .v-select__selection, .v-list-item-title {
+  font-family: 'NotoSansLao-SemiCondensed', 'Noto Sans Lao', sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'NotoSansLao-SemiCondensed', 'Noto Sans Lao', sans-serif !important;
 }

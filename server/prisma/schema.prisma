@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Tb_Price {
+  Price_ID   Int        @id @default(autoincrement())
+  Date       DateTime?  @default(now()) @db.DateTime(0)
+  Buy_price  Decimal?   @db.Decimal(10, 2)
+  Sell_price Decimal?   @db.Decimal(10, 2)
+  Tb_Product Tb_Product[]
+
+  @@map("tb_price")
+}
+
+model Tb_Product {
+  Pd_ID         String        @id @db.VarChar(10)
+  Price_ID      Int?
+  Order_ID      Int?
+  Inv_ID        Int?
+  Re_ID         Int?
+  Pd_name       String        @db.VarChar(50)
+  Type          String?       @db.VarChar(30)
+  Weight        String?       @db.VarChar(50)
+  Pattern_value Decimal?      @db.Decimal(10, 2)
+  Img           String?
+  status        ProductStatus @default(AVAILABLE)
+  Tb_Price      Tb_Price?     @relation(fields: [Price_ID], references: [Price_ID])
+  Tb_Order      Tb_Order?     @relation(fields: [Order_ID], references: [Order_ID])
+  Tb_Invoice    Tb_Invoice?   @relation(fields: [Inv_ID], references: [Inv_ID])
+  Tb_Repurchase Tb_Repurchase? @relation(fields: [Re_ID], references: [Re_ID])
+  Tb_Sell       Tb_Sell?
+  Tb_Order_Product Tb_Order_Product[]
+  NewProductExchanges Tb_Exchange[] @relation("NewProductExchanges")
+  OldProductInExchange Tb_Exchange? @relation("OldProductExchange")
+
+  @@map("tb_product")
+}
+
+model Tb_Customer {
+  Cust_ID       String         @id @db.VarChar(10)
+  Cust_name     String         @db.VarChar(100)
+  Phone         String?        @db.VarChar(15)
+  Address       String?        @db.Text
+  Tb_Sell       Tb_Sell[]
+  Tb_Repurchase Tb_Repurchase[]
+  Tb_Exchange   Tb_Exchange[]
+
+  @@map("tb_customer")
+}
+
+model Tb_User {
+  User_ID       String         @id @db.VarChar(255)
+  username      String         @unique @db.VarChar(50)
+  Password      String         @db.VarChar(255)
+  Role          UserRole?
+  Tb_Sell       Tb_Sell[]
+  Tb_Repurchase Tb_Repurchase[]
+
+  @@map("tb_user")
+}
+
+model Tb_Supplier {
+  Sup_ID    String      @id @db.VarChar(10)
+  Sup_name  String      @db.VarChar(100)
+  Phone     String?     @db.VarChar(15)
+  Address   String?     @db.Text
+  Tb_Order  Tb_Order[]
+
+  @@map("tb_supplier")
+}
+
+model Tb_Order {
+  Order_ID         Int                @id @default(autoincrement())
+  Sup_ID           String?            @db.VarChar(10)
+  Order_Date       DateTime?          @default(now()) @db.DateTime(0)
+  Status           OrderStatus?
+  Tb_Supplier      Tb_Supplier?       @relation(fields: [Sup_ID], references: [Sup_ID])
+  Tb_Product       Tb_Product[]
+  Tb_Order_Product Tb_Order_Product[]
+  Tb_Invoice       Tb_Invoice[]
+
+  @@map("tb_order")
+}
+
+model Tb_Order_Product {
+  Order_Product_ID Int        @id @default(autoincrement())
+  Order_ID         Int
+  Pd_ID            String     @db.VarChar(10)
+  Quantity         Int
+  Buy_price        Decimal    @db.Decimal(10, 2)
+  Discount         Decimal?   @db.Decimal(10, 2) @default(0.00)
+  Tb_Order         Tb_Order   @relation(fields: [Order_ID], references: [Order_ID])
+  Tb_Product       Tb_Product @relation(fields: [Pd_ID], references: [Pd_ID])
+
+  @@map("tb_order_product")
+}
+
+model Tb_Invoice {
+  Inv_ID      Int         @id @default(autoincrement())
+  Order_ID    Int?
+  Inv_Date    DateTime?   @default(now()) @db.DateTime(0)
+  Total_Price Decimal?    @db.Decimal(15, 2)
+  Status      InvoiceStatus?
+  Tb_Order    Tb_Order?   @relation(fields: [Order_ID], references: [Order_ID])
+  Tb_Product  Tb_Product[]
+
+  @@map("tb_invoice")
+}
+
+model Tb_Sell {
+  Sell_ID       Int        @id @default(autoincrement())
+  Pd_ID         String     @unique @db.VarChar(10)
+  Cust_ID       String?    @db.VarChar(10)
+  User_ID       String?    @db.VarChar(255)
+  Sell_Date     DateTime?  @default(now()) @db.DateTime(0)
+  Quantity      Int
+  Price_At_Sale Decimal    @db.Decimal(20, 2)
+  Total         Decimal?   @db.Decimal(20, 2)
+  Tb_Product    Tb_Product @relation(fields: [Pd_ID], references: [Pd_ID])
+  Tb_Customer   Tb_Customer? @relation(fields: [Cust_ID], references: [Cust_ID])
+  Tb_User       Tb_User?     @relation(fields: [User_ID], references: [User_ID])
+
+  @@map("tb_sell")
+}
+
+model Tb_Repurchase {
+  Re_ID                Int           @id @default(autoincrement())
+  Cust_ID              String?       @db.VarChar(10)
+  User_ID              String?       @db.VarChar(255)
+  Re_date              DateTime?     @default(now()) @db.DateTime(0)
+  Repurchase_Price     Decimal       @db.Decimal(10, 2)
+  Re_Reason            String?       @db.Text
+  Damage_Cost          Decimal?      @db.Decimal(10, 2) @default(0.00)
+  Loose_Gold_Cost      Decimal?      @db.Decimal(10, 2) @default(0.00)
+  Net_Repurchase_Price Decimal?      @db.Decimal(10, 2) @default(0.00)
+  Tb_Customer          Tb_Customer?  @relation(fields: [Cust_ID], references: [Cust_ID])
+  Tb_User              Tb_User?      @relation(fields: [User_ID], references: [User_ID])
+  Tb_Product           Tb_Product[]
+
+  @@map("tb_repurchase")
+}
+
+model Tb_Exchange {
+  Exch_ID              Int          @id @default(autoincrement())
+  Cust_ID              String?      @db.VarChar(10)
+  Old_Pd_ID            String?      @unique @db.VarChar(10)
+  New_Pd_ID            String?      @db.VarChar(10)
+  Exch_Date            DateTime?    @default(now()) @db.DateTime(0)
+  Old_Product_Value    Decimal?     @db.Decimal(10, 2)
+  New_Product_Value    Decimal?     @db.Decimal(10, 2)
+  Exchange_Fee         Decimal?     @db.Decimal(10, 2) @default(0)
+  Different_price      Decimal?     @db.Decimal(10, 2)
+  Notes                String?      @db.Text
+  Tb_Customer          Tb_Customer? @relation(fields: [Cust_ID], references: [Cust_ID])
+  Old_Product          Tb_Product?  @relation("OldProductExchange", fields: [Old_Pd_ID], references: [Pd_ID])
+  New_Product          Tb_Product?  @relation("NewProductExchanges", fields: [New_Pd_ID], references: [Pd_ID])
+
+  @@map("tb_exchange")
+}
+
+enum UserRole {
+  admin
+  user
+}
+
+enum OrderStatus {
+  Pending
+  Completed
+  Cancelled
+}
+
+enum InvoiceStatus {
+  Pending
+  Completed
+  Cancelled
+}
+
+enum ProductStatus {
+  AVAILABLE
+  SOLD
+  REPURCHASED
+  DAMAGED
+  EXCHANGED
+}
+
+// NOTE: The User model from the original schema seems to be different
+// from the Tb_User table in database.sql. I'm keeping Tb_User as defined
+// in the SQL file and removing the old User model.
+// You might need to adjust your application logic if it relied on the old User model. 

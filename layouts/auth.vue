@@ -18,6 +18,17 @@
         ຍິນດີຕ້ອນຮັບເຂົ້າສູ່ລະບົບ
       </h3>
 
+      <!-- Error Alert -->
+      <v-alert
+        v-if="error"
+        type="error"
+        class="mb-4"
+        closable
+        @click:close="error = ''"
+      >
+        {{ error }}
+      </v-alert>
+
       <!-- ช่องชื่อผู้ใช้ -->
       <v-text-field
         v-model="username"
@@ -98,16 +109,60 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import useApi from '~/composables/useApi'
 
 const username = ref('')
 const password = ref('')
+const error = ref('')
+const router = useRouter()
+const api = useApi()
 
-const login = () => {
-  console.log('Login:', username.value, password.value)
+const login = async () => {
+  error.value = ''
+  if (!username.value || !password.value) {
+    error.value = 'ກະລຸນາປ້ອນຊື່ຜູ້ໃຊ້ ແລະລະຫັດຜ່ານ'
+    return
+  }
+  try {
+    const response = await api.post('/auth/login', {
+      username: username.value,
+      password: password.value,
+    })
+
+    const data = response.data
+
+    if (response.status === 200 && data.token) {
+      // Handle successful login
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user)) // Store user info
+      
+      // Redirect to a protected page, e.g., home
+      router.push('/home')
+    } else {
+      // Handle cases where response is ok but login is not successful (e.g. wrong credentials)
+      console.error('Login failed:', data.message)
+      error.value = data.message || 'An unknown error occurred.'
+    }
+  } catch (err) {
+    console.error('An error occurred during login:', err)
+    if (err.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      error.value = err.response.data.message || 'ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ'
+    } else if (err.request) {
+      // The request was made but no response was received
+      error.value = 'ບໍ່ສາມາດເຊື່ອມຕໍ່ກັບເຊີບເວີໄດ້. ກະລຸນາລອງໃໝ່ອີກຄັ້ງ.'
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      error.value = 'ເກີດຂໍ້ຜິດພາດທີ່ບໍ່ຄາດຄິດ.'
+    }
+  }
 }
 
 const cancel = () => {
   username.value = ''
   password.value = ''
+  error.value = ''
 }
-</script>
+</script> 

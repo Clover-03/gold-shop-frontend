@@ -1,0 +1,18 @@
+Frontend (ส่วนแสดงผลหน้าเว็บ):
+	•	Vue.js – Framework JavaScript สำหรับสร้าง UI แบบ reactive
+	•	Nuxt.js – Framework ที่ต่อยอดจาก Vue.js เหมาะสำหรับสร้างเว็บแอปแบบ SSR (Server-side Rendering) หรือ SPA (Single Page Application)
+	•	Vuetify CSS – UI Framework ที่ใช้ Material Design ช่วยให้สร้างหน้าตาเว็บสวยงามได้ง่ายขึ้น
+
+Backend (ส่วนจัดการข้อมูลหลังบ้าน):
+	•	Node.js – JavaScript runtime สำหรับรันโค้ดฝั่งเซิร์ฟเวอร์
+	•	Express.js – Web framework สำหรับ Node.js ใช้ในการจัดการ routing และ middleware
+	•	Prisma – ORM (Object-Relational Mapping) สำหรับเชื่อมต่อและจัดการฐานข้อมูล MySQL ด้วยโค้ดที่เขียนง่าย
+
+Database (ฐานข้อมูล):
+	•	MySQL – ระบบจัดการฐานข้อมูลแบบ relational (RDBMS) ที่นิยมใช้กันอย่างแพร่หลาย
+
+Server (เซิร์ฟเวอร์จำลองสำหรับรันโปรเจ็ค):
+	•	XAMPP – โปรแกรมรวมที่ใช้จำลองเว็บเซิร์ฟเวอร์ในเครื่อง (มี Apache, MySQL, PHP ฯลฯ) แม้คุณจะไม่ได้ใช้ PHP แต่ใช้ XAMPP เพื่อรัน MySQL ได้
+
+
+https://github.com/Clover-03/gold-shop-frontend
