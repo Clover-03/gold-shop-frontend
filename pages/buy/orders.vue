@@ -198,7 +198,7 @@
         <v-card-title class="dialog-title">
           {{ isEditMode ? 'ແກ້ໄຂການສັ່ງຊື້' : 'ເພີ່ມການສັ່ງຊື້' }}
         </v-card-title>
-          <v-card-text>
+        <v-card-text>
           <v-form ref="formRef" v-model="formValid">
             <v-row>
               <v-col cols="12" sm="6" md="4">
@@ -438,7 +438,7 @@
           <v-btn class="btn-cancel" text @click="confirmDeleteDialog = false" :disabled="isSaving">ບໍ່</v-btn>
           <v-btn class="btn-save" @click="confirmDelete" :loading="isSaving">ແມ່ນ</v-btn>
           </v-card-actions>
-      </v-card>
+        </v-card>
     </v-dialog>
   </v-container>
 </template>
